@@ -20,9 +20,12 @@ contained in a first web page to access data in a second web page, but only if
 both web pages have the same origin."
 (https://en.wikipedia.org/wiki/Same-origin_policy)
 
-Similarly, file:// and http://localhost:8000 have different origins as well,
-and so the local machine cannot successfully request the date due to the
+Similarly, file:// and http://localhost:8000 also have different origins,
+and so the local machine cannot successfully request the data due to the
 same-origin policy.
 (http://stackoverflow.com/questions/7683596/xmlhttprequest-for-local-files)
 
-This policy is important because it protects the information in the page.
+This policy is important because it protects the information in the page from
+begin accessed by those who may not be trusted with the data, or who may
+use the data for malicious or even commercial but inconvenient or annoying
+reasons (such as advertising).
