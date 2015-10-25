@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+
+<html>
+
+	<head>
+		<title>Mapchat</title>
+		<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+		<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?sensor=true"></script>
+		<link rel="stylesheet" href="style.css" type="text/css" />
+
+		<script>
+		// much of this code from
+		// http://tuftsdev.github.com/WebProgramming/examples/google_maps/geolocation_map.html
+
+			var myLat = 0;
+			var myLng = 0;
+			var request = new XMLHttpRequest();
+			var me = new google.maps.LatLng(myLat, myLng);
+			var myOptions = {
+				zoom: 15, // causes Tufts to be somewhat at the center of the screen
+				center: me,
+				mapTypeId: google.maps.MapTypeId.ROADMAP
+			};
+			var map;
+			var marker;
+			var infowindow = new google.maps.InfoWindow();
+			
+			// initializes the map, called on body load
+			function init() {
+				map = new google.maps.Map(document.getElementById("map"), myOptions);
+				getMyLocation();
+			}
+			
+			// uses navigator.geolocation to find my location
+			function getMyLocation() {
+				if (navigator.geolocation) { // the navigator.geolocation object is supported on your browser
+					navigator.geolocation.getCurrentPosition(function(position) {
+						myLat = position.coords.latitude;
+						myLng = position.coords.longitude;
+						renderMap();
+					});
+				}
+				else {
+					document.getElementById("map").innerHTML = "<h1>Error: geolocation is not supported by your web browser.</h1>";
+				}
+			}
+
+			// draws me, as well as my classmates, on a map
+			function renderMap()
+			{
+				me = new google.maps.LatLng(myLat, myLng);
+				var http = new XMLHttpRequest();
+				var url = "https://secret-about-box.herokuapp.com/sendLocation";
+				var msg = "Testing";
+				var params = "login=MatthewScholl" + "&lat=" + myLat + "&lng=" + myLng + "&message=" + msg;
+				http.open("POST", url, true);
+				http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+				// listener function for when the ready state of the http request changes
+				http.onreadystatechange = function() {
+					if (http.readyState == 4 && http.status == 200) { // OK, got response from server
+						var info = JSON.parse(http.responseText);
+						for (var i = 0; i < info.length; i++) {
+							if (info[i]['login'] != "MatthewScholl"){
+								plotOther(info[i]);
+							}							
+						}
+    				} else if (request.readyState == 4 && request.status != 200) { // error in getting response
+						document.getElementById("map").innerHTML = "<h1>Error: no response from server.</h1>";
+					}
+				}
+
+				http.send(params);
+
+				// Update map and go there...
+				map.panTo(me);
+	
+				// Create a marker
+				var image = 'Smiley-Face-1.png';
+				marker = new google.maps.Marker({
+					position: me,
+					title: "MatthewScholl's Location",
+					icon: image
+				});
+				marker.setMap(map);
+					
+				// Open info window on click of marker
+				google.maps.event.addListener(marker, 'click', function() {
+					infowindow.setContent(marker.title);
+					infowindow.open(map, marker);
+				});
+			}
+
+			// given the info of another person, plot them on the map with a marker containing
+			// info about their login, their message, and the distance they are from me
+			function plotOther(info) {
+				var plotPosition = new google.maps.LatLng(info['lat'], info['lng']);
+
+				var distance = calcDistance(myLat, myLng, info['lat'], info['lng']);
+
+				var marker = new google.maps.Marker({
+					position: plotPosition,
+					title: "Login: " + info['login'] + ", Message: " + info['message'] + ", Distance: " + distance + " miles"
+				});
+
+				marker.setMap(map);
+						
+				// Open info window on click of marker
+				google.maps.event.addListener(marker, 'click', function() {
+					infowindow.setContent(marker.title);
+					infowindow.open(map, marker);
+				});		
+			}
+
+			// Following code is from http://www.movable-type.co.uk/scripts/latlong.html
+			function calcDistance(lat1, lon1, lat2, lon2) {
+				var R = 6371000; // meters
+				var phi1 = toRadians(lat1);
+				var phi2 = toRadians(lat2);
+				var Dphi = toRadians(lat2-lat1);
+				var Dl = toRadians(lon2-lon1);
+
+				var a = Math.sin(Dphi/2) * Math.sin(Dphi/2) +
+				        Math.cos(phi1) * Math.cos(phi2) *
+				        Math.sin(Dl/2) * Math.sin(Dl/2);
+				var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+				return (0.000621371 /* number of miles in one meter */ * R * c); 
+			}
+
+			// following code is from
+			// http://stackoverflow.com/questions/14560999/using-the-haversine-formula-in-javascript
+			function toRadians(x) {
+   				return x * Math.PI / 180;
+			}
+
+		</script>
+	</head>
+	
+	<body onload="init()">
+		<div id="map"></div>
+	</body>
+</html>
