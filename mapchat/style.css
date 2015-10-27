@@ -1,3 +1,6 @@
+/* much of this code from
+http://tuftsdev.github.com/WebProgramming/examples/google_maps/geolocation_map.html*/
+
 html, body {
 	height: 100%;
 	margin: 0px;
