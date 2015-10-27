@@ -39,15 +39,13 @@
 						myLng = position.coords.longitude;
 						renderMap();
 					});
-				}
-				else {
+				} else {
 					document.getElementById("map").innerHTML = "<h1>Error: geolocation is not supported by your web browser.</h1>";
 				}
 			}
 
 			// draws me, as well as my classmates, on a map
-			function renderMap()
-			{
+			function renderMap() {
 				me = new google.maps.LatLng(myLat, myLng);
 				var http = new XMLHttpRequest();
 				var url = "https://secret-about-box.herokuapp.com/sendLocation";
@@ -72,7 +70,7 @@
 
 				http.send(params);
 
-				// Update map and go there...
+				// Update map and pan to my location
 				map.panTo(me);
 	
 				// Create a marker
