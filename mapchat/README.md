@@ -1,5 +1,7 @@
 Erica Schwartz
+
 README
+
 Assignment 2: Mapchat
 
 As far as I know, all aspects of the work have been correctly implemented.
