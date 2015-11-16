@@ -50,7 +50,7 @@
 			function renderMap() {
 				me = new google.maps.LatLng(myLat, myLng);
 				var http = new XMLHttpRequest();
-				var url = "https://secret-about-box.herokuapp.com/sendLocation";
+				var url = "localhost:3000/sendLocation";
 				var msg = "Testing";
 				var params = "login=MatthewScholl" + "&lat=" + myLat + "&lng=" + myLng + "&message=" + msg;
 				http.open("POST", url, true);
