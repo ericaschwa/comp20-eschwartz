@@ -50,7 +50,7 @@
 			function renderMap() {
 				me = new google.maps.LatLng(myLat, myLng);
 				var http = new XMLHttpRequest();
-				var url = "localhost:3000/sendLocation";
+				var url = "http://localhost:3000/sendLocation";
 				var msg = "Testing";
 				var params = "login=MatthewScholl" + "&lat=" + myLat + "&lng=" + myLng + "&message=" + msg;
 				http.open("POST", url, true);
@@ -60,6 +60,7 @@
 				http.onreadystatechange = function() {
 					if (http.readyState == 4 && http.status == 200) { // OK, got response from server
 						var info = JSON.parse(http.responseText);
+						console.log(info);
 						for (var i = 0; i < info.length; i++) {
 							if (info[i]['login'] != "MatthewScholl"){
 								plotOther(info[i]);
