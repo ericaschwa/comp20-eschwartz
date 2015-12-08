@@ -1,0 +1,164 @@
+<!doctype html>
+
+<html>
+	<head>
+		<meta charset="utf-8">
+		<link rel="stylesheet" href="style.css">
+		<script src="https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js"></script>
+		<title>Security Report</title>
+	</head>
+
+	<body>
+		<h1>Security and Privacy Assessment of Client-Side and Server-Side</h1>
+		<h3>By: Erica Schwartz</h3>
+		<h3>12/8/2015</h3>
+		<hr>
+		<h2>Introduction</h2>
+		<p>For this assignment, I was tasked with finding at least three security vulnerabilities in Julie Sanduski's implementation of the client and server sides of the Mapchat webapp (Assignments 2 and 3). The specifications that Julie was working with for these assignments are as follows:
+		<ul>
+			<li>For the client side (<a href="http://tuftsdev.github.io/WebProgramming/assignments/a2.html">Assignment 2</a>):
+				<ul>
+					<li>'Retrieves your current location and sends your current location with a message to a datastore'</li>
+					<li>'Retrieves and displays the locations and messages of people on the map'</li>
+				</ul>
+			</li>
+			<li>For the server side (<a href="http://tuftsdev.github.io/WebProgramming/assignments/a3.html">Assignment 3</a>):
+				<ul>
+					<li>POST /sendLocation API<br>When sent a valid login, lat, lng, and message, adds an entry into the database and returns a JSON string that is an array of the items in the database.</li>
+					<li>GET /latest.json API<br>'Returns the last known location of a login as a JSON string of a single object.'</li>
+					<li>GET / API<br>Displays a 'list of the check-ins and messages for all logins sorted in descending order by timestamp' as a webpage.</li>
+				</ul>
+			</li>
+		</ul>
+		Although Julie's web app is functional, it does contain a few security vulnerabilities which must be fixed. I have enumerated and described them in the following document, and have also described how these vulnerabilities may be removed, in order to strengthen the security of this webapp. By 'vulnerabilities,' I mean a features in the webapp that allow malicious users to deface the page, harm the datastore, or gain access to information that they should not have access to. I have found examples of each of these things in this webapp.</p>
+		<hr>
+		<h2>Methodology</h2>
+		<p>I started this project by sending requests to Julie's server. To do this, I used Postman. Through this process, I concluded that her server was functional, but I did find style and JavaScript injection vulnerabilities. Then, I exchanged mapchat code with Julie, as well as having her add me as a collaborator to her heroku repository. This allowed me to look through her code, to get a better idea of what some of the potential vulnerabilities might be. Then, I thought and consulted TA's about what other vulnerabilities may exist, and I realized that filling the database could be a vulnerability. I wrote some JavaScript code that sends lots of requests to the server to see if, theoretically, a malicious person could do this to fill the database's capacity.
+		<hr>
+		<h2>Abstract of Findings</h2>
+		<p>The first security issue I identified is a vulnerability to the injection of style code into the page "https://radiant-atoll-8089.herokuapp.com/". This would allow malicious users to alter the appearance of the page, even making all contents of the page disappear.</p>
+		<p>The second security issue I identified is a vulnerability to the injection of JavaScript code into the page "https://radiant-atoll-8089.herokuapp.com/". This would allow malicious users to run any code that they would like to run on page's users' browsers. They could get access to the user's private information, execute code that harms the browser, or redirect the user to a malicious site.</p>
+		<p>The third security issue I have identified is a vulnerability to a client filling the database by posting many times to the server. When the database is full, it will no longer work because it cannot accept new data.</p>
+		<p>The fourth security issue I have identified is a vulnerability to a client getting latest login information without a valid login, or for a login other than their own.</p>
+		<p>There are a few other security vulnerabilities on this webapp which I do not cover in depth here. The main one is inherent to the specification of the server, and is that anyone can take on any username. This could allow a malicious user to impersonate someone else, and give an inaccurate location or message from that person. This issue would be avoided by requiring people to log in to the site with a username and password. Additionally, making peoples' locations public is inherently a privacy vulnerability. One more potential source of errors on this page is that the user is permitted to submit a latitude and longitude which are not numbers. This will cause the user's location to not show up on the map when mapchat is loaded, and will therefore render the Mapchat page inaccurate because it does not display all logins in the database.</p>
+		<hr>
+		<h2>Issues Found</h2>
+		<ol>
+			<li class="issue"><span class="title">Issue 1: Injection of Style Code</span>
+				<ul>
+					<li>Location: index.js of Heroku server, GET '/' and POST '/sendLocation' API functions</li>
+					<li>Severity: &nbsp;<span class="lowseverity">Low to Medium</span>. This is because while it could cause a GET '/' request to return a defaced page, it will not actually do anything to harm the client other than not giving them what they asked for when the request is made from a web browser. Another problem with the client's ability to send style code to the database is that any other site that displays the results of the database will also be subject to that style code, unless they sanitize what the database returns. However, this is a relatively minor problem that is very possible to protect against.</li>
+					<li>A client can send the database code between style tags while making a POST '/sendLocation' request (as shown in the first screenshot), and the database will store it as is. Then, whenever a client makes a GET '/' request for the contents of the page (as in the second screenshot), the entire page will be subject to that injected style code, which is, in this case, to not display anything. This could obfuscate or remove the database's information from the page. I found this vulnerability through testing with Postman.
+						<br>
+						<img class="forty" src="styleinjection1.png" alt="how to: style injection">
+						<img class="fifty-five" src="styleinjection2.png" alt="style injection"> 
+					</li>
+					<li>Julie's code in the POST '/sendLocation' API function to get the message that she will store is currently:<br>
+					<pre class="prettyprint">var message = request.body.message;</pre><br>
+					She could resolve the style injection issue by using a complete sanitizer such as the one <a href="https://github.com/google/caja/blob/master/src/com/google/caja/plugin/html-sanitizer.js", alt="sanitizer">here</a>, or, if she only wants to protect against attacks like this one, by replacing it with the following code (<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace" alt="source">source</a>):<br>
+					<pre class="prettyprint">var message = request.body.message.replace(/&lt;/gi, 'lessthan');</pre>
+					</li>
+				</ul>
+			</li>
+
+			<li class="issue"><span class="title">Issue 2: Injection of JavaScript Code (Cross-Site Scripting)</span>
+				<ul>
+					<li>Location: index.js of Heroku server, GET '/' and POST '/sendLocation' API functions</li>
+					<li>Severity: &nbsp;<span class="highseverity">High</span>. This is because, as mentioned in the Abstract, cross-site scripting allow malicious users to run any code that they would like to run on the user's browser. They could get access to the user's private information, execute code that harms the browser, or redirect the user to a malicious site. The vulnerability is also very easy to find and to take advantage of. However, it is also very possible to protect against.</li>
+					<li>A client can send the database code between script tags while making a POST '/sendLocation' request (as shown in the first screenshot), and the database will store it as is. Then, whenever a client makes a GET '/' request for the contents of the page, the page will run the injected JavaScript code. As shown in the second screenshot, I was able to inject code for a redirection to the Double Rainbow video on YouTube: not a malicious site, although it easily could have been. I found this vulnerability through testing with Postman.<br>
+						<img class="seventy" src="codeinjection1.png" alt="how to: code injection">
+						<img class="twenty-five" src="codeinjection2.png" alt="code injection"> 
+					</li>
+					<li>The steps Julie could take to resolve this issue are the same as the ones that would resolve the first issue.</li>
+				</ul>
+			</li>
+
+			<li><span class="title">Issue 3: Filling the Database</span>
+				<ul>
+					<li>Location: index.js of Heroku server, POST '/sendLocation' API function</li>
+					<li>Severity: &nbsp;<span class="mediumseverity">Medium</span>. This is because a full database will not actually do anything to harm the client, other than possibly taking away the web app's ability to function normally. However, it is damaging to the site, because it will break the site- no longer allowing it to store new data. The site administrators will either need to purchase more space for the database, or they will need to delete some of their data, which would take away the site's ability to return all logins, and could possibly throw away some important data. If a user sends requests in an infinite loop, the site administrators will be unable to increase their database size, or clean up their database, enough keep up with these requests, and the site will be broken.</li>
+					<li>A client can write a simple infinite loop that sends post requests to the server. The code I wrote to test this (as shown in the first screenshot) is not an infinite loop, because I did not have time to allow the code to run for long enough to actually fill the database, and because I was worried that Mongo might charge Julie's credit card if I exceed her database's limit. However, I was able to successfully post 100 times to Julie's database. I confirmed this with both console logs (which I had print in the callback function when the database returned a ready state of 4 and a status code of 200), and by viewing the entries to the database in Postman. As the second screenshot shows, I was able to post many times to this database, even within the same second. It is not a stretch to say that if my for loop did not stop at 100 but rather stopped at a much higher number or continued indefinitely, I could easily fill Julie's database.<br>
+						<img class="fifty-five" src="fillstorage1.png" alt="how to: fill storage">
+						<img class="forty" src="fillstorage2.png" alt="fill storage"> 
+					</li>
+					<li>In order to resolve this issue, Julie would need to somehow restrict posts to the database. It would not work to restrict posts by a given login, because a malicious user could easily just switch off logins. The only way to restrict post flow is to add a mandatory time delay for each post; this would just make the process of filling the database with posts slightly more difficult and time-consuming. Additionally, Julie would need to stop allowing database posts when the database was almost full (nearing the size limit of 500MB), if she did not want to risk being charged for additional space usage. Both of these actions would impact how functional her server is, and could make it depart from its contract. These methods would work as follows:<br>
+					The code to insert a new entry into the database as it stands currently:<br>
+						
+
+						<pre class="prettyprint">
+db.collection('checkins', function(error, collection) {
+	var id = collection.insert(toInsert, function(error, saved) {
+		if (error) {
+			response.send(500);
+		}
+		else {
+			db.collection('recentcheckins').update({'login':login}, {$set: toIn{upsert: true});
+			collection.find({}).sort({created_at:-1}).toArray(function(error, data){
+				response.send(data);	
+			});
+		}
+	});
+});</pre>
+						<br>
+					The edits I would add:<br>
+						<pre class="prettyprint">
+function callback(data) {
+	response.send(data);
+}
+db.collection('checkins', function(error, collection) {
+	var sizeInBytes = collection.dataSize();
+	if (sizeInBytes > 499900000) { // creates 499.9MB database size limit
+		response.send(500);
+	} else {
+		var id = collection.insert(toInsert, function(error, saved) {
+			if (error) {
+				response.send(500);
+			}
+			else {
+				db.collection('recentcheckins').update({'login':login}, {$set: toIn{upsert: true});
+				collection.find({}).sort({created_at:-1}).toArray(function(error, data){
+					setTimeout(callback,3000,data); // creates 3 second delay
+				});
+			}
+		});
+	}
+});</pre>
+						<br>
+					</li>
+				</ul>
+			</li>
+
+			<li class="issue"><span class="title">Issue 4: Request Injection</span>
+				<ul>
+					<li>Location: index.js of Heroku server, GET '/latest.json' API function</li>
+					<li>Severity: &nbsp;<span class="lowseverity">Low</span>. This is because while it does allow the user to access to other users' information without a valid login, the user could do this anyway via the GET '/' request method. The main vulnerability here is that the user has the ability to change the spec of what the server is returning; instead of returning the latest login for a user (or '{}', if the user has not logged in), it returns the login information for a user who has logged in other than the user in question. However, because all of the information is publicly available anyway, this is a relatively minor problem that is very possible to protect against, and poses little security risk to the page or to the clients. See <a href="http://php.net/manual/en/mongo.security.php" alt="request injection">here</a> for more information on request injection.</li>
+					<li>While making a GET '/latest.json' request, a client can, (as shown in the screenshot), make a query for login[$ne]=foo, where foo is any string. Normally, the program should only take queries of the form login=validlogin and otherwise return '{}'. However, as shown in the  screenshot, this webpage responds to the request with a JSON object containing a different user's login. I found this vulnerability through testing with Postman.
+						<br>
+						<img src="reqinject1.png" alt="request injection">
+					</li>
+					<li>Through various console.log statements, I discovered that when I do a request injection, the request.query.login, as opposed to being some string such as "mchow", is an object: { '$ne': 'foo' }. Therefore, I realized that this problem can be fixed with a simple "if" statement that checks the type of the login.
+					Julie's code in the GET '/latest.json' API function to get the query is currently:<br>
+					<pre class="prettyprint">
+var login = request.query.login;
+db.collection('recentcheckins', function(er, collection) {
+	collection.find({'login':login}).toArray(function(err, cursor) {
+		...</pre><br>
+					She could resolve the request injection issue by replacing it with the following code:<br>
+					<pre class="prettyprint">
+var login = request.query.login;
+if (typeof(login) !== "string"){
+	response.send('{}');
+} else {
+	db.collection('recentcheckins', function(er, collection) {
+		collection.find({'login':login}).toArray(function(err, cursor) {
+			...</pre>
+					</li>
+				</ul>
+			</li>
+
+		</ol>
+		<hr>
+		<h2>Conclusion</h2>
+		<p>This site is inherently insecure, by nature of the specification. However, there are ways to make this site slightly more secure, which I have outlined here. Future considerations include possibly implementing a username-password scheme in order to prevent users impersonating one another, and being pickier about what kinds of input are accepted into the server (for example, latitude and longitude must be valid numbers.) On the whole, most of the bugs and vulnerabilities that I found would be relatively easy to fix. However, security is an ever-changing field, and there will always be a new vulnerability, and a new way to hack this site. The best we as the site administrators can do is to try to keep up, and try our best to protect our data and our site from the actions of malicious clients.</p>
+	</body>
+</html>

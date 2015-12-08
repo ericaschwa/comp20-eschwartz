@@ -1,0 +1,50 @@
+body {
+	font-family: Lucida;
+}
+
+h2 {
+	text-align: center;
+	background-color: white;
+	margin: auto;
+	padding: 10px;
+}
+
+img {
+	width: 45%
+}
+
+.forty {
+	width: 40%;
+}
+
+.fifty-five {
+	width: 55%;
+}
+
+.seventy {
+	width: 70%;
+}
+
+.twenty-five {
+	width: 25%;
+}
+
+.issue {
+	padding-bottom: 50px;
+}
+
+.title {
+	font-weight: bold;
+}
+
+.highseverity {
+	background-color: red;
+}
+
+.mediumseverity {
+	background-color: orange;
+}
+
+.lowseverity {
+	background-color: yellow;
+}
