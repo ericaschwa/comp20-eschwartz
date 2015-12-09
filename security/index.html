@@ -14,7 +14,7 @@
 		<h3>12/8/2015</h3>
 		<hr>
 		<h2>Introduction</h2>
-		<p>For this assignment, I was tasked with finding at least three security vulnerabilities in Julie Sanduski's implementation of the client and server sides of the Mapchat webapp (Assignments 2 and 3). The specifications that Julie was working with for these assignments are as follows:
+		For this assignment, I was tasked with finding at least three security vulnerabilities in Julie Sanduski's implementation of the client and server sides of the Mapchat webapp (Assignments 2 and 3). The specifications that Julie was working with for these assignments are as follows:
 		<ul>
 			<li>For the client side (<a href="http://tuftsdev.github.io/WebProgramming/assignments/a2.html">Assignment 2</a>):
 				<ul>
@@ -30,7 +30,7 @@
 				</ul>
 			</li>
 		</ul>
-		Although Julie's web app is functional, it does contain a few security vulnerabilities which must be fixed. I have enumerated and described them in the following document, and have also described how these vulnerabilities may be removed, in order to strengthen the security of this webapp. By 'vulnerabilities,' I mean a features in the webapp that allow malicious users to deface the page, harm the datastore, or gain access to private information. I have found examples of each of these things in this webapp.</p>
+		Although Julie's web app is functional, it does contain a few security vulnerabilities which must be fixed. I have enumerated and described them in the following document, and have also described how these vulnerabilities may be removed, in order to strengthen the security of this webapp. By 'vulnerabilities,' I mean a features in the webapp that allow malicious users to deface the page, harm the datastore, or gain access to private information. I have found examples of each of these things in this webapp.
 		<hr>
 		<h2>Methodology</h2>
 		<p>I started this project by sending requests to Julie's server. To do this, I used Postman. Through this process, I found a few vulnerabilities in Julie's server. I uncovered style and code injection vulnerabilities, got the server to accept invalid latitudes and longitudes, and found a way for users to be returned other users' latest.json data. Then, I exchanged mapchat code with Julie, as well as having her add me as a collaborator to her heroku repository. This allowed me to look through her code, to get a better idea of what some of the potential vulnerabilities might be, and to see why the vulnerabilities I found exist and how to fix them. Then, I thought and consulted TA's about what other vulnerabilities may exist, and I realized that filling the database could be a vulnerability. I wrote some JavaScript code that sends lots of requests to the server to see if, theoretically, a malicious person could do this to fill the database's capacity.
