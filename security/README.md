@@ -14,5 +14,7 @@ I have discussed this assignment with Julie Sanduski, as her Assignments 2
 and 3 were the ones I was analyzing for security. I have also utilized online
 resources such as stackoverflow. Wherever and whenever I made use of such
 resources, I have made a note of this and have linked to the page in question.
+Finally, the wonderful comp20 TAs, including Yotam and John, also helped me
+to consider various security vulnerabilities.
 
 I have spent approximately seven hours completing this assignment.
